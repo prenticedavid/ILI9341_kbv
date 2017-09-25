@@ -18,6 +18,7 @@
 #include "Adafruit_GFX.h"// Hardware-specific library
 #include <ILI9341_kbv.h>
 ILI9341_kbv tft;
+#define MCUFRIEND_KBV_H_ 100
 //#include <MCUFRIEND_kbv.h>
 //MCUFRIEND_kbv tft;
 //#include <Adafruit_TFTLCD.h>
