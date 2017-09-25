@@ -1,5 +1,5 @@
 #if defined(__AVR_ATmega328P__) && defined(ILI9488_KBV_H_) 
-#define USE_SERIAL_COMPLEX     //optimised C code for Uno, Xmega, ...
+//#define USE_SERIAL_COMPLEX     //optimised C code for Uno, Xmega, ...
 #endif
 #if defined(__STM32F1__)
 #define DMA__STM32F1__         //special feature of MAPLE CORE
