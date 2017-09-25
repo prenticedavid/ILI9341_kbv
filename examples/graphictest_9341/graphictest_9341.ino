@@ -86,6 +86,43 @@ void showhanzi(unsigned int x, unsigned int y, unsigned char index)
     }
 }
 
+void diag_reg(const __FlashStringHelper *name, uint8_t reg, uint8_t n)
+{
+    uint8_t x = reg;
+    Serial.print(name);
+    Serial.print(" (0x");
+    Serial.print(x < 0x10 ? "0" : "");
+    Serial.print(x, HEX);
+    Serial.print("):");
+    for (int i = 0; i < n; i++) {
+        uint8_t x = tft.readcommand8(reg, i);
+        Serial.print(x < 0x10 ? " 0" : " ");
+        Serial.print(x, HEX);
+    }
+    Serial.println("");
+}
+
+void diag_show(void)
+{
+    diag_reg(F("ILI9488_RDDID"), 0x04, 5);
+    diag_reg(F("ILI9488_RDIMGFMT"), 0x0A, 1);
+    diag_reg(F("ILI9488_RDMADCTL"), 0x0B, 1);
+    diag_reg(F("ILI9488_RDPIXFMT"), 0x0C, 1);
+    diag_reg(F("ILI9488_RDSELFDIAG"), 0x0F, 1);
+    diag_reg(F("ILI9488_DFUNCTR"), 0xb6, 5);
+    diag_reg(F("ILI9488_PWCTR1"), 0xC0, 3);
+    diag_reg(F("ILI9488_VMCTR1"), 0xC5, 3);
+    diag_reg(F("ILI9488_VMCTR2"), 0xC7, 2);
+    diag_reg(F("NVM Status   "), 0xD2, 3);
+    diag_reg(F("ID4          "), 0xD3, 4);
+    diag_reg(F("ILI9488_RDID1"), 0xDA, 2);
+    diag_reg(F("ILI9488_RDID2"), 0xDB, 2);
+    diag_reg(F("ILI9488_RDID3"), 0xDC, 2);
+    diag_reg(F("GAMMAP       "), 0xE0, 16);
+    diag_reg(F("GAMMAN       "), 0xE1, 16);
+    diag_reg(F("INTERFACE    "), 0xf6, 4);
+}
+
 void setup(void) {
     Serial.begin(9600);
     uint32_t when = millis();
@@ -93,12 +130,14 @@ void setup(void) {
     if (!Serial) delay(5000);           //allow some time for Leonardo
     Serial.println("Serial took " + String((millis() - when)) + "ms to start");
     //    tft.reset();                 //hardware reset
-    uint16_t ID = tft.readID(); //
+    uint16_t ID; //
+    ID = tft.readID();     //crashes ESP32
     Serial.print("ID = 0x");
     Serial.println(ID, HEX);
     if (ID == 0xD3D3) ID = 0x9481; // write-only shield
 //    ID = 0x9329;                             // force ID
     tft.begin(ID);
+    diag_show();
 }
 
 #if defined(MCUFRIEND_KBV_H_)
@@ -587,4 +626,3 @@ unsigned long testFilledRoundRects() {
 
     return micros() - start;
 }
-
