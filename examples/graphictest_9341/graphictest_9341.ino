@@ -132,9 +132,13 @@ void setup(void) {
     Serial.println("Serial took " + String((millis() - when)) + "ms to start");
     //    tft.reset();                 //hardware reset
     uint16_t ID; //
+#if defined(ESP32)
+    Serial.println("ESP32 crashes on readID() before begin()");
+#else
     ID = tft.readID();     //crashes ESP32
     Serial.print("ID = 0x");
     Serial.println(ID, HEX);
+#endif
     if (ID == 0xD3D3) ID = 0x9481; // write-only shield
 //    ID = 0x9329;                             // force ID
     tft.begin(ID);
