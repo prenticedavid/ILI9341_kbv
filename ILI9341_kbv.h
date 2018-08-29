@@ -1,7 +1,7 @@
 #ifndef ILI9341_KBV_H_
 #define ILI9341_KBV_H_ 100
 
-#define USE_MBED 0
+#define USE_MBED defined(__MBED__)
 
 #if ARDUINO < 165
 #define USE_GFX_KBV
@@ -12,8 +12,31 @@
 
 class ILI9341_kbv : public Adafruit_GFX {
 
-	public:
+#if USE_MBED
+public:
+#if defined(TARGET_LPC1768)
+  ILI9341_kbv(PinName CS=p8, PinName RS=p9, PinName RST=p10);
+#else
+  ILI9341_kbv(PinName CS=D10, PinName RS=D9, PinName RST=D8);
+#endif
+private:
+    void write16_N(uint16_t color, int16_t n) {
+        uint16_t buf[16];
+        color = (color << 8)|(color >> 8);
+        for (int i = 0; i < 16 && i < n; i++) buf[i] = color;
+        while (n > 0) {
+            int cnt = (n > 16) ? 16 : n;
+            _spi.write((const char*)buf, cnt * 2, NULL, 0);
+            n -= cnt;
+        }
+    }
+    SPI _spi;
+    DigitalOut      _lcd_pin_cs, _lcd_pin_rs, _lcd_pin_reset;
+#else
+public:
 	ILI9341_kbv();
+#endif
+public:
 	void     reset(void);                                       // you only need the constructor
 	void     begin(uint16_t ID = 0x9341);                                       // you only need the constructor
 	virtual void     drawPixel(int16_t x, int16_t y, uint16_t color);  // and these three
@@ -37,10 +60,11 @@ class ILI9341_kbv : public Adafruit_GFX {
 	void     pushColors(uint8_t *block, int16_t n, bool first);    //NEW
 	void     pushColors(const uint8_t *block, int16_t n, bool first, bool bigend = false); //NEW
 	void     vertScroll(int16_t top, int16_t scrollines, int16_t offset);
-	
+
 	protected:
-	
+
 	private:
+    uint8_t readReg8(uint8_t reg, uint8_t dat);
 	uint16_t        _lcd_ID;
 };
 
