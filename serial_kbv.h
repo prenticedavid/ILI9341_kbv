@@ -39,6 +39,15 @@
 
 #if defined(USE_SERIAL_COMPLEX)
 #include "serial_complex.h"
+#elif defined(__AVR_ATxmega32A4U__) || defined(__AVR_ATxmega128A4U__)
+#include "serial_xmega.h"
+#define xchg8(x)     xchg8_1(x)
+#define WriteCmd(x)  { CD_COMMAND; xchg8_1(x); CD_DATA; }
+#define wait_ms(ms)  delay(ms)
+#define write16(x)   { write16_N(x, 1); }
+#define write24(x)   { write24_N(x, 1); }
+#define WriteData(x) { write16(x); }
+
 #else
 
 #include <SPI.h>                //include before write16() macro
@@ -213,7 +222,7 @@ static inline void write24_N(uint16_t color, int16_t n)
 #endif
 }
 
-static inline void write8_block(uint8_t * block, int16_t n)
+static inline void write8_block(uint8_t * block, int16_t n, uint8_t bigend = 0)
 {
 #if defined(NINEBITS)
     while (n-- > 0) WriteDat8(*block++);
@@ -223,8 +232,52 @@ static inline void write8_block(uint8_t * block, int16_t n)
     SPI.dmaSend(block, n, 1);
 #elif defined(__STM32F1__)
 	SPI.write(block, (uint32_t)n);
+#elif defined(__SAMD21G18A__)
+    Sercom *s = SERCOM1; 
+	if (bigend) {
+        n >>= 1;
+        while (n--) {
+	        uint8_t l = *block++, h = *block++;
+			while (s->SPI.INTFLAG.bit.DRE == 0) ;
+            s->SPI.DATA.bit.DATA = h;
+			while (s->SPI.INTFLAG.bit.DRE == 0) ;
+            s->SPI.DATA.bit.DATA = l;
+        }	
+	}
+    else {	
+	while (n--) {
+	    while (s->SPI.INTFLAG.bit.DRE == 0) ;
+        s->SPI.DATA.bit.DATA = *block++;
+	}
+    }
+	while (s->SPI.INTFLAG.bit.TXC == 0) ;
+    s->SPI.DATA.bit.DATA;
+    s->SPI.DATA.bit.DATA;
 #else
 	SPI.transfer(block, n);
 #endif
 }
+
+#if defined(__SAMD21G18A__)
+static inline void spi_pattern(uint8_t * txbuf, uint16_t * rxbuf, int16_t n, int16_t rpt = 0)
+{
+    Sercom *s = SERCOM1;
+	uint8_t cmd, reply;
+    do {	
+	    for (int i = n; i--; ) {
+	        cmd = (txbuf == NULL) ? 0 : *txbuf++; 
+			while (s->SPI.INTFLAG.bit.DRE == 0) ;
+            s->SPI.DATA.bit.DATA = cmd;
+			if (s->SPI.INTFLAG.bit.RXC) {
+				reply = s->SPI.DATA.bit.DATA;
+			    if (rxbuf) *rxbuf++ = reply;
+            }
+        }
+	} while (--rpt > 0);
+    while (s->SPI.INTFLAG.bit.TXC == 0) ;
+    reply = s->SPI.DATA.bit.DATA;
+    if (rxbuf) *rxbuf++ = reply;
+}
+#endif
+
 #endif
