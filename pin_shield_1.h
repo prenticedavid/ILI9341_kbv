@@ -372,7 +372,7 @@
 #define PIN_READ(port, pin)   (port)->PDIR & (1u<<(pin))
 
 
-#elif defined(MKL25Z4) || defined(TARGET_KL25Z)
+#elif defined(MKL25Z4) || defined(TARGET_KL25Z)    //FRDM-KL25Z
   #include <MKL25Z4.h>
   #define D0_PORT PTA
   #define D0_PIN  1
@@ -423,7 +423,7 @@
 #define PIN_INPUT(port, pin)  (port)->PDDR &= ~(1u<<(pin))
 #define PIN_READ(port, pin)   (port)->PDIR & (1u<<(pin))
 
-#elif defined(MKL26Z4)
+#elif defined(MKL26Z4)    //FRDM-KL26Z
   #include <MKL26Z4.h>
   #define D0_PORT PTA
   #define D0_PIN  1
@@ -474,7 +474,7 @@
 #define PIN_INPUT(port, pin)  (port)->PDDR &= ~(1u<<(pin))
 #define PIN_READ(port, pin)   (port)->PDIR & (1u<<(pin))
 
-#elif defined(MKL05Z4)
+#elif defined(MKL05Z4)    //FRDM-KL05Z
   #include <MKL05Z4.h>
   #define D0_PORT PTB
   #define D0_PIN  2
@@ -493,17 +493,17 @@
   #define D7_PORT PTB
   #define D7_PIN  7
   #define D8_PORT PTB
-  #define D8_PIN  13
+  #define D8_PIN  10
   #define D9_PORT PTB
-  #define D9_PIN  5
+  #define D9_PIN  11
   #define D10_PORT PTA
-  #define D10_PIN  0
+  #define D10_PIN  5
   #define D11_PORT PTA
-  #define D11_PIN  2
+  #define D11_PIN  7
   #define D12_PORT PTA
-  #define D12_PIN  3
+  #define D12_PIN  6
   #define D13_PORT PTB
-  #define D13_PIN  1
+  #define D13_PIN  0
   #define A0_PORT PTB
   #define A0_PIN  8
   #define A1_PORT PTB
@@ -525,7 +525,7 @@
 #define PIN_INPUT(port, pin)  (port)->PDDR &= ~(1u<<(pin))
 #define PIN_READ(port, pin)   (port)->PDIR & (1u<<(pin))
 
-#elif defined(MK20D5) || defined(TARGET_K20D50M)
+#elif defined(MK20D5) || defined(TARGET_K20D50M)    //FRDM-K20D50M
   #include <MK20D5.h>
   #define D0_PORT PTE
   #define D0_PIN  1

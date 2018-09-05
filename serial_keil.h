@@ -95,20 +95,24 @@ static inline void write9_block(uint8_t * block, int16_t n)
 }
 
 #elif defined(ILI9341_KBV_H_)
-#if defined(NUCLEO)
-#define INIT()       { CD_OUTPUT; CS_OUTPUT; RESET_OUTPUT; spi1_init(0, 0); }
-#define flush()      spi1_flush()
-#define xchg8(x)     (spi1_write(x), spi1_read())
+#if defined(NUCLEO) || defined(MKL26Z4)
+#define INIT()       { CD_OUTPUT; CS_OUTPUT; RESET_OUTPUT; spi1_init(0, 1); }
+#define flush()      {int cnt = 3; while (cnt--) { spi1_flush(); } } //spi1_flush()
+//#define flush()      spi1_flush()
+#define write8(x)    spi1_write(x)
+#define read8()      spi1_read()
 #else
-#define INIT()       { CD_OUTPUT; CS_OUTPUT; RESET_OUTPUT; spi0_init(0, 0); }
-#define flush()      spi0_flush()
-#define xchg8(x)     (spi0_write(x), spi0_read())
+#define INIT()       { CD_OUTPUT; CS_OUTPUT; RESET_OUTPUT; spi0_init(3, 0); }
+#define flush()      {int cnt = 3; while (cnt--) { spi0_flush(); } } //spi0_flush()
+//#define flush()      spi0_flush()
+#define write8(x)    spi0_write(x)
+#define read8()      spi0_read()
 #endif
-#define write8(x)    xchg8(x)
-#define read8()      xchg8(0)
+#define xchg8(x)     (write8(x), read8())
 #define write16(x)   { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define WriteCmd(x)  { CD_COMMAND; write8(x); CD_DATA; }
+#define WriteCmd(x)  { flush(); CD_COMMAND; write8(x); flush(); CD_DATA; }
 #define WriteData(x) { write16(x); }
+#define FLUSH_IDLE   { flush(); CS_IDLE; }
 
 #elif defined(ST7735X_KBV_H_)
 //HW: write @12MHz, readbits @1.5MHz.    128x128 Tests=2.29s

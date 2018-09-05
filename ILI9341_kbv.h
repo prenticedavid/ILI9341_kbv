@@ -20,16 +20,7 @@ public:
   ILI9341_kbv(PinName CS=D10, PinName RS=D9, PinName RST=D8);
 #endif
 private:
-    void write16_N(uint16_t color, int16_t n) {
-        uint16_t buf[16];
-        color = (color << 8)|(color >> 8);
-        for (int i = 0; i < 16 && i < n; i++) buf[i] = color;
-        while (n > 0) {
-            int cnt = (n > 16) ? 16 : n;
-            _spi.write((const char*)buf, cnt * 2, NULL, 0);
-            n -= cnt;
-        }
-    }
+    void write16_N(uint16_t color, int16_t n);
     SPI _spi;
     DigitalOut      _lcd_pin_cs, _lcd_pin_rs, _lcd_pin_reset;
 #else

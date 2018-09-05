@@ -1,27 +1,14 @@
+//to do: check MBED timing
+//to do: read ID at faster SPI speeds
+
 #include "ILI9341_kbv.h"
 
-#if USE_MBED == 1
-#define CS_IDLE       { _lcd_pin_cs = 1; }
-#define CS_ACTIVE     _lcd_pin_cs = 0
-#define CD_DATA       { _lcd_pin_rs = 1; }
-#define CD_COMMAND    _lcd_pin_rs = 0
-#define RESET_IDLE    _lcd_pin_reset = 1
-#define RESET_ACTIVE  _lcd_pin_reset = 0
-#define xchg8(x)     _spi.write((uint8_t)x)
-#define write8(x)    { _spi.write((uint8_t)x); }
-#define write16(x)   { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define WriteCmd(x)  { CD_COMMAND; xchg8(x); CD_DATA; }
-#define WriteData(x) { write16(x); }
-#define write8_block(block, N) _spi.write((const char*)block, N, NULL, 0)
-#define INIT()  { ; }
+#if defined(__MBED__)
+#include "serial_mbed.h"
 
 ILI9341_kbv::ILI9341_kbv(PinName CS, PinName RS, PinName RST)
     : _lcd_pin_rs(RS), _lcd_pin_cs(CS), _lcd_pin_reset(RST), _spi(D11, D12, D13), Adafruit_GFX(240, 320)
 {
-    _spi.format(8, 0);
-    _spi.frequency(12000000);
-    CS_IDLE;
-    RESET_IDLE;
 }
 
 #elif defined(__CC_ARM) || defined(__CROSSWORKS_ARM)
@@ -58,7 +45,7 @@ void ILI9341_kbv::pushCommand(uint16_t cmd, uint8_t * block, int8_t N)
     CS_ACTIVE;
     WriteCmd(cmd);
     write8_block(block, N);
-    CS_IDLE;
+    FLUSH_IDLE;
 }
 
 #define ILI9341_CMD_NOP                             0x00
@@ -116,7 +103,7 @@ uint8_t ILI9341_kbv::readReg8(uint8_t reg, uint8_t dat)
     CS_ACTIVE;
     WriteCmd(reg);
     ret = xchg8(dat);           //only safe to read @ SCK=16MHz
-    CS_IDLE;
+    FLUSH_IDLE;
     return ret;
 }
 
@@ -159,7 +146,7 @@ int16_t ILI9341_kbv::readGRAM(int16_t x, int16_t y, uint16_t * block, int16_t w,
         b = xchg8(0xFF);
         *block++ = color565(r, g, b);
     }
-    CS_IDLE;
+    FLUSH_IDLE;
     setAddrWindow(0, 0, width() - 1, height() - 1);
     return 0;
 }
@@ -197,7 +184,7 @@ void ILI9341_kbv::drawPixel(int16_t x, int16_t y, uint16_t color)
     write16(y);
     WriteCmd(ILI9341_CMD_MEMORY_WRITE);
     write16(color);
-    CS_IDLE;
+    FLUSH_IDLE;
 }
 
 void ILI9341_kbv::setAddrWindow(int16_t x, int16_t y, int16_t x1, int16_t y1)
@@ -209,7 +196,7 @@ void ILI9341_kbv::setAddrWindow(int16_t x, int16_t y, int16_t x1, int16_t y1)
     WriteCmd(ILI9341_CMD_PAGE_ADDRESS_SET);
     write16(y);
     write16(y1);
-    CS_IDLE;
+    FLUSH_IDLE;
 }
 
 void ILI9341_kbv::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
@@ -242,7 +229,7 @@ void ILI9341_kbv::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t 
     while (h-- > 0) {
         write16_N(color, w);
     }
-    CS_IDLE;
+    FLUSH_IDLE;
     setAddrWindow(0, 0, width() - 1, height() - 1);
 }
 
@@ -257,7 +244,7 @@ void ILI9341_kbv::pushColors(uint16_t * block, int16_t n, bool first)
         color = *block++;
         write16(color);
     }
-    CS_IDLE;
+    FLUSH_IDLE;
 }
 
 void ILI9341_kbv::pushColors(uint8_t * block, int16_t n, bool first)
@@ -274,7 +261,7 @@ void ILI9341_kbv::pushColors(uint8_t * block, int16_t n, bool first)
         color = (h << 8) | l;
         write16(color);
     }
-    CS_IDLE;
+    FLUSH_IDLE;
 }
 
 void ILI9341_kbv::pushColors(const uint8_t * block, int16_t n, bool first, bool bigend)
@@ -291,7 +278,7 @@ void ILI9341_kbv::pushColors(const uint8_t * block, int16_t n, bool first, bool 
         color = (bigend) ? (l << 8 ) | h : (h << 8) | l;
         write16(color);
     }
-    CS_IDLE;
+    FLUSH_IDLE;
 }
 
 void ILI9341_kbv::invertDisplay(boolean i)
@@ -314,7 +301,7 @@ void ILI9341_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
 
     WriteCmd(0x0037)
     write16(vsp);        //VLSP
-    CS_IDLE;
+    FLUSH_IDLE;
 }
 
 #define TFTLCD_DELAY8 0xFF
@@ -416,7 +403,7 @@ void ILI9341_kbv::begin(uint16_t ID)
                 uint8_t x = pgm_read_byte(p++);
                 xchg8(x);
             }
-            CS_IDLE;
+            FLUSH_IDLE;
         }
         size -= len + 2;
     }
