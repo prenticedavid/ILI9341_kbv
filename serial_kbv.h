@@ -114,6 +114,8 @@ static uint8_t spibuf[16];
 #define PIN_INPUT(p, b)      pinMode(b, INPUT_PULLUP)
 #define PIN_READ(p, b)       digitalRead(b)
 
+#define FLUSH_IDLE { CS_IDLE; }
+
 static SPISettings settings(8000000, MSBFIRST, SPI_MODE0);
 
 static inline void write_8(uint8_t val)

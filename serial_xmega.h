@@ -24,6 +24,8 @@
 #define PIN_INPUT(p, b)      (p).DIR &= ~(1<<(b))
 #define PIN_READ(p, b)       ((p).IN & (1<<(b)))
 
+#define FLUSH_IDLE { CS_IDLE; }
+
 static inline void spi_init(void)
 {
     USARTD0.CTRLB = SPCRVAL;
